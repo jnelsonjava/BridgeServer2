@@ -761,6 +761,7 @@ CREATE TABLE Demographics (
   `userId` varchar(255) NOT NULL,
   `category` varchar(255) NOT NULL,
   `answerValue` varchar(1024),
-  PRIMARY KEY (`appId`, `userId`, `category`),
-  CONSTRAINT `Demographics-Account-Constraint` FOREIGN KEY (`userId`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE
+  PRIMARY KEY (`userId`, `category`),
+  CONSTRAINT `Demographics-Account-Constraint` FOREIGN KEY (`userId`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `Demographics-Study-Constraint` FOREIGN KEY (`appId`) REFERENCES `Substudies` (`studyId`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
