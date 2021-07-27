@@ -753,3 +753,14 @@ ADD COLUMN `logoGuid` varchar(255);
 
 ALTER TABLE `Substudies`
 MODIFY COLUMN `phase` enum('LEGACY', 'DESIGN', 'RECRUITMENT', 'IN_FLIGHT', 'ANALYSIS', 'COMPLETED', 'WITHDRAWN') DEFAULT 'LEGACY';
+
+-- changeset bridge:42
+
+CREATE TABLE Demographics (
+  `appId` varchar(255) NOT NULL,
+  `userId` varchar(255) NOT NULL,
+  `category` varchar(255) NOT NULL,
+  `answerValue` varchar(1024),
+  PRIMARY KEY (`appId`, `userId`, `category`),
+  CONSTRAINT `Demographics-Account-Constraint` FOREIGN KEY (`userId`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
