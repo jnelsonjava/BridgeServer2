@@ -759,9 +759,8 @@ MODIFY COLUMN `phase` enum('LEGACY', 'DESIGN', 'RECRUITMENT', 'IN_FLIGHT', 'ANAL
 CREATE TABLE Demographics (
   `appId` varchar(255) NOT NULL,
   `userId` varchar(255) NOT NULL,
-  `category` varchar(255) NOT NULL,
+  `category` enum('RACE', 'ETHNICITY', 'SEX', 'GENDER', 'DISEASE', 'BIRTH_YEAR', 'BLOOD_PRESSURE', 'HEIGHT', 'WEIGHT', 'COUNTRY') NOT NULL,
   `answerValue` varchar(1024),
   PRIMARY KEY (`userId`, `category`),
-  CONSTRAINT `Demographics-Account-Constraint` FOREIGN KEY (`userId`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `Demographics-Study-Constraint` FOREIGN KEY (`appId`) REFERENCES `Substudies` (`studyId`) ON DELETE CASCADE
+  CONSTRAINT `Demographics-Account-Constraint` FOREIGN KEY (`userId`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

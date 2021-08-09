@@ -18,8 +18,11 @@ public class Demographic implements BridgeEntity {
     @Id
     private String userId;
     @Id
-    private String category;
+    private DemographicCategory category;
     private String answerValue;
+
+    public Demographic() {
+    }
 
     public String getAppId() {
         return appId;
@@ -37,11 +40,11 @@ public class Demographic implements BridgeEntity {
         this.userId = userId;
     }
 
-    public String getCategory() {
+    public DemographicCategory getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(DemographicCategory category) {
         this.category = category;
     }
 

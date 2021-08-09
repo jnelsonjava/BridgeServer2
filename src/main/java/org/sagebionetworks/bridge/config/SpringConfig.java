@@ -51,6 +51,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.sagebionetworks.bridge.dynamodb.DynamoParticipantFile;
+import org.sagebionetworks.bridge.models.accounts.Demographic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseDataSource;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -641,6 +642,7 @@ public class SpringConfig {
         metadataSources.addAnnotatedClass(AdherenceRecord.class);
         metadataSources.addAnnotatedClass(StudyActivityEvent.class);
         metadataSources.addAnnotatedClass(Notification.class);
+        metadataSources.addAnnotatedClass(Demographic.class);
         
         SessionFactory factory = metadataSources.buildMetadata().buildSessionFactory();
         

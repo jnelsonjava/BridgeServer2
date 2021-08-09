@@ -1,29 +1,27 @@
-package org.sagebionetworks.bridge.hibernate;
+package org.sagebionetworks.bridge.services;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.sagebionetworks.bridge.dao.DemographicDao;
 import org.sagebionetworks.bridge.models.accounts.Demographic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-
 @Component
-public class HibernateDemographicDao implements DemographicDao {
+public class DemographicService {
 
-    private HibernateHelper hibernateHelper;
+    private DemographicDao demographicDao;
 
-    @Resource(name = "mysqlHibernateHelper")
-    final void setHibernateHelper(HibernateHelper hibernateHelper) {
-        this.hibernateHelper = hibernateHelper;
+    @Autowired
+    final void setDemographicDao(DemographicDao demographicDao) {
+        this.demographicDao = demographicDao;
     }
 
-    @Override
     public void createDemographic(Demographic demographic) {
         checkNotNull(demographic);
 
         System.out.println(demographic.getCategory());
 
-        hibernateHelper.create(demographic);
+        demographicDao.createDemographic(demographic);
     }
 }
