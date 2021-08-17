@@ -16,6 +16,7 @@ import static org.sagebionetworks.bridge.TestConstants.SCHEDULE_GUID;
 import static org.sagebionetworks.bridge.TestConstants.TEST_APP_ID;
 import static org.sagebionetworks.bridge.TestConstants.TEST_ORG_ID;
 import static org.sagebionetworks.bridge.TestConstants.TEST_STUDY_ID;
+import static org.sagebionetworks.bridge.models.activities.ActivityEventUpdateType.IMMUTABLE;
 import static org.sagebionetworks.bridge.models.studies.StudyPhase.ANALYSIS;
 import static org.sagebionetworks.bridge.models.studies.StudyPhase.COMPLETED;
 import static org.sagebionetworks.bridge.models.studies.StudyPhase.DESIGN;
@@ -30,6 +31,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -56,6 +58,7 @@ import org.sagebionetworks.bridge.models.PagedResourceList;
 import org.sagebionetworks.bridge.models.VersionHolder;
 import org.sagebionetworks.bridge.models.schedules2.Schedule2;
 import org.sagebionetworks.bridge.models.studies.Study;
+import org.sagebionetworks.bridge.models.studies.StudyCustomEvent;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -327,8 +330,9 @@ public class StudyServiceTest {
         Study existing = Study.create();
         existing.setIdentifier(TEST_STUDY_ID);
         existing.setName("oldName");
-        existing.setPhase(IN_FLIGHT);
+        existing.setPhase(DESIGN);
         existing.setCreatedOn(DateTime.now());
+        existing.setScheduleGuid(SCHEDULE_GUID);
         when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(existing);
         when(mockStudyDao.updateStudy(any())).thenReturn(VERSION_HOLDER);
 
@@ -347,13 +351,66 @@ public class StudyServiceTest {
         assertEquals(returnedValue.getAppId(), TEST_APP_ID);
         assertEquals(returnedValue.getIdentifier(), TEST_STUDY_ID);
         assertEquals(returnedValue.getName(), "newName");
-        assertEquals(returnedValue.getPhase(), IN_FLIGHT);
+        assertEquals(returnedValue.getPhase(), DESIGN);
+        assertEquals(returnedValue.getScheduleGuid(), SCHEDULE_GUID);
         assertNotNull(returnedValue.getCreatedOn());
         assertNotNull(returnedValue.getModifiedOn());
         
         verify(mockCacheProvider).removeObject(CACHE_KEY);
     }
     
+    @Test
+    public void updateStudy_setScheduleGuidWorks() {
+        Study existing = Study.create();
+        existing.setIdentifier(TEST_STUDY_ID);
+        existing.setName("oldName");
+        existing.setPhase(DESIGN);
+        existing.setCreatedOn(DateTime.now());
+        
+        when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(existing);
+        when(mockStudyDao.updateStudy(any())).thenReturn(VERSION_HOLDER);
+
+        Study study = Study.create();
+        study.setAppId("wrongAppId");
+        study.setIdentifier(TEST_STUDY_ID);
+        study.setName("newName");
+        study.setPhase(DESIGN);
+        study.setScheduleGuid(SCHEDULE_GUID);
+        
+        service.updateStudy(TEST_APP_ID, study);
+        
+        verify(mockStudyDao).updateStudy(studyCaptor.capture());
+        
+        Study returnedValue = studyCaptor.getValue();
+        assertEquals(returnedValue.getScheduleGuid(), SCHEDULE_GUID);
+    }
+    
+    @Test
+    public void updateStudy_unsetScheduleGuidDoesNotWork() {
+        Study existing = Study.create();
+        existing.setIdentifier(TEST_STUDY_ID);
+        existing.setName("oldName");
+        existing.setPhase(DESIGN);
+        existing.setCreatedOn(DateTime.now());
+        existing.setScheduleGuid(SCHEDULE_GUID);
+        
+        when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(existing);
+        when(mockStudyDao.updateStudy(any())).thenReturn(VERSION_HOLDER);
+
+        Study study = Study.create();
+        study.setAppId("wrongAppId");
+        study.setIdentifier(TEST_STUDY_ID);
+        study.setName("newName");
+        study.setPhase(DESIGN);
+        
+        service.updateStudy(TEST_APP_ID, study);
+        
+        verify(mockStudyDao).updateStudy(studyCaptor.capture());
+        
+        Study returnedValue = studyCaptor.getValue();
+        assertEquals(returnedValue.getScheduleGuid(), SCHEDULE_GUID);
+    }
+
     @Test(expectedExceptions = EntityNotFoundException.class)
     public void updateStudyInvalidStudy() {
         Study study = Study.create();
@@ -403,41 +460,56 @@ public class StudyServiceTest {
     }
 
     @Test
-    public void updateStudyCanUpdateCore() { 
+    public void updateStudyCanUpdateCore() {
         Study existing = Study.create();
         existing.setIdentifier(TEST_STUDY_ID);
         existing.setName("oldName");
-        existing.setPhase(IN_FLIGHT);
+        existing.setPhase(DESIGN);
         existing.setCreatedOn(DateTime.now());
         when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(existing);
 
-        // No change is occurring to the scheduleGuid, so this is OK
+        StudyCustomEvent event1 = new StudyCustomEvent("event1", IMMUTABLE);
+        StudyCustomEvent event2 = new StudyCustomEvent("event2", IMMUTABLE);
+        List<StudyCustomEvent> events = ImmutableList.of(event1, event2);
+        
         Study study = Study.create();
         study.setName("new name");
         study.setIdentifier(TEST_STUDY_ID);
+        study.setCustomEvents(events);
         
         service.updateStudy(TEST_APP_ID, study);
         
-        verify(mockStudyDao).updateStudy(study);
+        verify(mockStudyDao).updateStudy(studyCaptor.capture());
+        assertEquals(studyCaptor.getValue().getCustomEvents(), events);
     }
     
-    @Test(expectedExceptions = BadRequestException.class,
-            expectedExceptionsMessageRegExp = ".*Study schedule cannot be changed or removed.*")
-    public void updateStudyCannotUpdateCore() { 
+    @Test
+    public void updateStudyCannotUpdateCoreFields() { 
+        StudyCustomEvent event1 = new StudyCustomEvent("event1", IMMUTABLE);
+        StudyCustomEvent event2 = new StudyCustomEvent("event2", IMMUTABLE);
+        List<StudyCustomEvent> events = ImmutableList.of(event1, event2);
+        
         Study existing = Study.create();
         existing.setIdentifier(TEST_STUDY_ID);
         existing.setName("oldName");
         existing.setPhase(IN_FLIGHT);
         existing.setCreatedOn(DateTime.now());
-        existing.setScheduleGuid("some-value-that-cannot-be-removed");
+        existing.setScheduleGuid(SCHEDULE_GUID);
+        existing.setCustomEvents(events);
         when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(existing);
 
         // It doesn’t even matter what you’re submitting, it’ll fail
         Study study = Study.create();
         study.setName("new name");
         study.setIdentifier(TEST_STUDY_ID);
+        study.setScheduleGuid("some-other-guid");
+        study.setCustomEvents(ImmutableList.of(new StudyCustomEvent("event2", IMMUTABLE)));
         
         service.updateStudy(TEST_APP_ID, study);
+        
+        verify(mockStudyDao).updateStudy(studyCaptor.capture());
+        assertEquals(studyCaptor.getValue().getScheduleGuid(), SCHEDULE_GUID);
+        assertEquals(studyCaptor.getValue().getCustomEvents(), events);
     }
     
     @Test
@@ -477,10 +549,24 @@ public class StudyServiceTest {
         
         service.deleteStudyPermanently(TEST_APP_ID, TEST_STUDY_ID);
         
+        verify(mockScheduleService, never()).deleteSchedulePermanently(any(), any());
         verify(mockStudyDao).deleteStudyPermanently(TEST_APP_ID, TEST_STUDY_ID);
         verify(mockCacheProvider).removeObject(CACHE_KEY);
     }    
 
+    @Test
+    public void deleteStudyPermanently_deletesScheduleFirst() {
+        Study study = Study.create();
+        study.setScheduleGuid(SCHEDULE_GUID);
+        when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(study);
+        
+        service.deleteStudyPermanently(TEST_APP_ID, TEST_STUDY_ID);
+        
+        verify(mockScheduleService).deleteSchedulePermanently(TEST_APP_ID, SCHEDULE_GUID);
+        verify(mockStudyDao).deleteStudyPermanently(TEST_APP_ID, TEST_STUDY_ID);
+        verify(mockCacheProvider).removeObject(CACHE_KEY);
+    }
+    
     @Test(expectedExceptions = EntityNotFoundException.class)
     public void deleteStudyPermanentlyNotFound() {
         service.deleteStudyPermanently(TEST_APP_ID, TEST_STUDY_ID);
@@ -627,6 +713,51 @@ public class StudyServiceTest {
                 .withCallerRoles(ImmutableSet.of(STUDY_COORDINATOR)).build());
         Study study = Study.create();
         study.setPhase(DESIGN);
+        study.setScheduleGuid(SCHEDULE_GUID);
+        study.setIdentifier(TEST_STUDY_ID);
+        when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(study);
+        
+        Schedule2 schedule = new Schedule2();
+        when(mockScheduleService.getSchedule(TEST_APP_ID, SCHEDULE_GUID)).thenReturn(schedule);
+
+        service.transitionToWithdrawn(TEST_APP_ID, TEST_STUDY_ID);
+        
+        verify(mockStudyDao).updateStudy(study);
+        assertEquals(study.getPhase(), WITHDRAWN);
+        
+        verify(mockScheduleService).publishSchedule(TEST_APP_ID, SCHEDULE_GUID);
+    }
+    
+    @Test
+    public void transitionToWithdrawnScheduleAlreadyPublished() {
+        RequestContext.set(new RequestContext.Builder()
+                .withOrgSponsoredStudies(ImmutableSet.of(TEST_STUDY_ID))
+                .withCallerRoles(ImmutableSet.of(STUDY_COORDINATOR)).build());
+        Study study = Study.create();
+        study.setPhase(DESIGN);
+        study.setIdentifier(TEST_STUDY_ID);
+        study.setScheduleGuid(SCHEDULE_GUID);
+        when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(study);
+        
+        Schedule2 schedule = new Schedule2();
+        schedule.setPublished(true);
+        when(mockScheduleService.getSchedule(TEST_APP_ID, SCHEDULE_GUID)).thenReturn(schedule);
+        
+        service.transitionToWithdrawn(TEST_APP_ID, TEST_STUDY_ID);
+        
+        verify(mockStudyDao).updateStudy(study);
+        assertEquals(study.getPhase(), WITHDRAWN);
+        
+        verify(mockScheduleService, never()).publishSchedule(any(), any());
+    }
+    
+    @Test
+    public void transitionToWithdrawnWithNoSchedule() {
+        RequestContext.set(new RequestContext.Builder()
+                .withOrgSponsoredStudies(ImmutableSet.of(TEST_STUDY_ID))
+                .withCallerRoles(ImmutableSet.of(STUDY_COORDINATOR)).build());
+        Study study = Study.create();
+        study.setPhase(DESIGN);
         study.setIdentifier(TEST_STUDY_ID);
         when(mockStudyDao.getStudy(TEST_APP_ID, TEST_STUDY_ID)).thenReturn(study);
         
@@ -634,6 +765,9 @@ public class StudyServiceTest {
         
         verify(mockStudyDao).updateStudy(study);
         assertEquals(study.getPhase(), WITHDRAWN);
+        assertNull(study.getScheduleGuid());
+
+        verifyZeroInteractions(mockScheduleService);
     }
     
     // As all the phase transition methods use the same code, I'm only goind to write the error
@@ -691,5 +825,11 @@ public class StudyServiceTest {
         service.transitionToInFlight(TEST_APP_ID, TEST_STUDY_ID);
         
         verify(mockCacheProvider).removeObject(CACHE_KEY);
+    }
+    
+    @Test
+    public void removeScheduleFromStudies() {
+        service.removeScheduleFromStudies(TEST_APP_ID, SCHEDULE_GUID);
+        verify(mockStudyDao).removeScheduleFromStudies(TEST_APP_ID, SCHEDULE_GUID);
     }
 }
