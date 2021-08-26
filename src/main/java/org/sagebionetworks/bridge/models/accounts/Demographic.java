@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 @Entity
 @Table(name = "Demographics")
@@ -18,6 +20,7 @@ public class Demographic implements BridgeEntity {
     @Id
     private String userId;
     @Id
+    @Enumerated(EnumType.STRING)
     private DemographicCategory category;
     private String answerValue;
 
