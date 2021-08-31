@@ -51,11 +51,18 @@ public class DemographicService {
     }
 
     public ParticipantDemographicSummary getParticipantDemographics(String userId) {
+        // TODO: Validate userId
+        DemographicList demographicList = demographicDao.getParticipantDemographicList(userId);
 
         Map<DemographicCategory, String> demographicMap = new HashMap<>();
-        demographicMap.put(DemographicCategory.COUNTRY, "WA");
+
+        for (Demographic demographic : demographicList.getDemographics()) {
+            demographicMap.put(demographic.getCategory(), demographic.getAnswerValue());
+        }
+
         return new ParticipantDemographicSummary(demographicMap);
     }
+
     // TODO: Make a getDemographicSummary method
 
     // TODO: Make a queryDemographic method

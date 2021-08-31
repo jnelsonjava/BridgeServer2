@@ -2,12 +2,18 @@ package org.sagebionetworks.bridge.hibernate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableMap;
 import org.sagebionetworks.bridge.dao.DemographicDao;
 import org.sagebionetworks.bridge.models.accounts.Demographic;
 import org.sagebionetworks.bridge.models.accounts.DemographicId;
+import org.sagebionetworks.bridge.models.accounts.DemographicList;
+import org.sagebionetworks.bridge.models.accounts.ParticipantDemographicSummary;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class HibernateDemographicDao implements DemographicDao {
@@ -47,5 +53,20 @@ public class HibernateDemographicDao implements DemographicDao {
         checkNotNull(demographicId);
 
         return hibernateHelper.getById(Demographic.class, demographicId);
+    }
+
+    @Override
+    public DemographicList getParticipantDemographicList(String userId) {
+
+        Map<String, Object> parameters = ImmutableMap.of("userId", userId);
+        List<Demographic> demographicList = hibernateHelper.queryGet("select demo from Demographic demo where userId=:userId",
+                parameters,
+                null,
+                null,
+                Demographic.class);
+
+//        System.out.println(demographicList);
+
+        return new DemographicList(demographicList);
     }
 }
