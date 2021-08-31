@@ -7,7 +7,7 @@ public interface DemographicDao {
 
     void createDemographic(Demographic demographic);
 
-    void updateDemographic(Demographic demographic);
+    void saveDemographic(Demographic demographic);
 
     void deleteDemographic(DemographicId demographicId);
 

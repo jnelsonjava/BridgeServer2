@@ -29,10 +29,10 @@ public class HibernateDemographicDao implements DemographicDao {
     }
 
     @Override
-    public void updateDemographic(Demographic demographic) {
+    public void saveDemographic(Demographic demographic) {
         checkNotNull(demographic);
 
-        hibernateHelper.update(demographic);
+        hibernateHelper.saveOrUpdate(demographic);
     }
 
     @Override

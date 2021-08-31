@@ -3,10 +3,12 @@ package org.sagebionetworks.bridge.services;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.sagebionetworks.bridge.dao.DemographicDao;
-import org.sagebionetworks.bridge.models.accounts.Demographic;
-import org.sagebionetworks.bridge.models.accounts.DemographicId;
+import org.sagebionetworks.bridge.models.accounts.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class DemographicService {
@@ -18,22 +20,22 @@ public class DemographicService {
         this.demographicDao = demographicDao;
     }
 
-    public void createDemographic(Demographic demographic) {
-        checkNotNull(demographic);
+    public void createDemographics(DemographicList demographicList) {
+        checkNotNull(demographicList);
         // TODO: Maybe check access permissions here? Or just in Controller?
 
-        System.out.println(demographic.getCategory());
 
         // TODO: Validate demographic
-        // TODO: Check that it's not attempting to overwrite? Or make it create/update?
 
-        demographicDao.createDemographic(demographic);
+        for (Demographic demographic : demographicList.getDemographics()) {
+            saveDemographic(demographic);
+        }
     }
 
-    public void updateDemographic(Demographic demographic) {
+    public void saveDemographic(Demographic demographic) {
         checkNotNull(demographic);
 
-        demographicDao.updateDemographic(demographic);
+        demographicDao.saveDemographic(demographic);
     }
 
     public void deleteDemographic(DemographicId demographicId) {
@@ -48,6 +50,13 @@ public class DemographicService {
         return demographicDao.getDemographic(demographicId);
     }
 
+    public ParticipantDemographicSummary getParticipantDemographics(String userId) {
+
+        Map<DemographicCategory, String> demographicMap = new HashMap<>();
+        demographicMap.put(DemographicCategory.COUNTRY, "WA");
+        return new ParticipantDemographicSummary(demographicMap);
+    }
     // TODO: Make a getDemographicSummary method
+
     // TODO: Make a queryDemographic method
 }
