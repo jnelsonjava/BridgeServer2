@@ -24,7 +24,6 @@ public class DemographicService {
         checkNotNull(demographicList);
         // TODO: Maybe check access permissions here? Or just in Controller?
 
-
         // TODO: Validate demographic
 
         for (Demographic demographic : demographicList.getDemographics()) {
@@ -50,7 +49,7 @@ public class DemographicService {
         return demographicDao.getDemographic(demographicId);
     }
 
-    public ParticipantDemographicSummary getParticipantDemographics(String userId) {
+    public ParticipantDemographics getParticipantDemographics(String userId) {
         // TODO: Validate userId
         DemographicList demographicList = demographicDao.getParticipantDemographicList(userId);
 
@@ -60,10 +59,11 @@ public class DemographicService {
             demographicMap.put(demographic.getCategory(), demographic.getAnswerValue());
         }
 
-        return new ParticipantDemographicSummary(demographicMap);
+        return new ParticipantDemographics(demographicMap);
     }
 
     // TODO: Make a getDemographicSummary method
+
 
     // TODO: Make a queryDemographic method
 }

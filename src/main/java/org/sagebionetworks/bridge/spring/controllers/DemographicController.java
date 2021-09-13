@@ -4,7 +4,12 @@ import static org.sagebionetworks.bridge.Roles.RESEARCHER;
 import static org.sagebionetworks.bridge.Roles.STUDY_COORDINATOR;
 
 import org.sagebionetworks.bridge.models.StatusMessage;
-import org.sagebionetworks.bridge.models.accounts.*;
+import org.sagebionetworks.bridge.models.accounts.UserSession;
+import org.sagebionetworks.bridge.models.accounts.DemographicList;
+import org.sagebionetworks.bridge.models.accounts.Demographic;
+import org.sagebionetworks.bridge.models.accounts.DemographicId;
+import org.sagebionetworks.bridge.models.accounts.DemographicCategory;
+import org.sagebionetworks.bridge.models.accounts.ParticipantDemographics;
 import org.sagebionetworks.bridge.services.DemographicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +40,7 @@ public class DemographicController extends BaseController {
             demographic.setAppId(session.getAppId());
             demographic.setUserId(userId);
         }
-//        System.out.println("-------CONTROLLER---------");
-//        System.out.println(demographic.getAppId());
-//        System.out.println(demographic.getUserId());
-//        System.out.println(demographic.getCategory());
-//        System.out.println(demographic.getAnswerValue());
+
         demographicService.createDemographics(demographicList);
 
         return new StatusMessage("Demographic created.");
@@ -78,10 +79,10 @@ public class DemographicController extends BaseController {
     }
 
     @GetMapping("/v3/participant/{userId}/demographics")
-    public ParticipantDemographicSummary getParticipantDemographicSummary(@PathVariable String userId) {
+    public ParticipantDemographics getParticipantDemographicSummary(@PathVariable String userId) {
         UserSession session = getAuthenticatedSession(RESEARCHER, STUDY_COORDINATOR);
 
-        // TODO: Validate userId
+        // TODO: Validate userId, can it be checked without hitting the database?
 
         return demographicService.getParticipantDemographics(userId);
     }

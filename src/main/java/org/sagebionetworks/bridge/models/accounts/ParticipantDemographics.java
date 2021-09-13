@@ -2,10 +2,10 @@ package org.sagebionetworks.bridge.models.accounts;
 
 import java.util.Map;
 
-public class ParticipantDemographicSummary {
+public class ParticipantDemographics {
     private final Map<DemographicCategory, String> demographicMap;
 
-    public ParticipantDemographicSummary(Map<DemographicCategory, String> demographicMap) {
+    public ParticipantDemographics(Map<DemographicCategory, String> demographicMap) {
         this.demographicMap = demographicMap;
     }
 

@@ -7,7 +7,6 @@ import org.sagebionetworks.bridge.dao.DemographicDao;
 import org.sagebionetworks.bridge.models.accounts.Demographic;
 import org.sagebionetworks.bridge.models.accounts.DemographicId;
 import org.sagebionetworks.bridge.models.accounts.DemographicList;
-import org.sagebionetworks.bridge.models.accounts.ParticipantDemographicSummary;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -23,15 +22,6 @@ public class HibernateDemographicDao implements DemographicDao {
     @Resource(name = "mysqlHibernateHelper")
     final void setHibernateHelper(HibernateHelper hibernateHelper) {
         this.hibernateHelper = hibernateHelper;
-    }
-
-    @Override
-    public void createDemographic(Demographic demographic) {
-        checkNotNull(demographic);
-
-        System.out.println(demographic.getCategory());
-
-        hibernateHelper.create(demographic);
     }
 
     @Override
@@ -64,8 +54,6 @@ public class HibernateDemographicDao implements DemographicDao {
                 null,
                 null,
                 Demographic.class);
-
-//        System.out.println(demographicList);
 
         return new DemographicList(demographicList);
     }

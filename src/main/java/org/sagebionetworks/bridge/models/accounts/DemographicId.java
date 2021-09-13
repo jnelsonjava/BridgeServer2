@@ -1,6 +1,5 @@
 package org.sagebionetworks.bridge.models.accounts;
 
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
