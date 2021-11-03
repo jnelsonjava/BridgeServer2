@@ -18,6 +18,7 @@ import static org.sagebionetworks.bridge.services.AppService.EXPORTER_SYNAPSE_US
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -157,6 +158,14 @@ public class AppServiceTest extends Mockito {
     OrganizationService mockOrgService;
     @Mock
     StudyService mockStudyService;
+    @Mock
+    AccountService mockAccountService;
+    @Mock
+    AssessmentService mockAssessmentService;
+    @Mock
+    AssessmentResourceService mockAssessmentResourceService;
+    @Mock
+    Schedule2Service mockScheduleService;
 
     @Captor
     ArgumentCaptor<Project> projectCaptor;
@@ -723,6 +732,10 @@ public class AppServiceTest extends Mockito {
 
         // verify we called the correct dependent services
         verify(mockAppDao).deleteApp(app);
+        
+        verify(mockAccountService).deleteAllAccounts(app.getIdentifier());
+        verify(mockAssessmentResourceService).deleteAllAssessmentResources(app.getIdentifier());
+        verify(mockAssessmentService).deleteAllAssessments(app.getIdentifier());
         verify(mockStudyService).deleteAllStudies(app.getIdentifier());
         verify(mockOrgService).deleteAllOrganizations(app.getIdentifier());
         verify(mockCompoundActivityDefinitionService).deleteAllCompoundActivityDefinitionsInApp(
@@ -730,7 +743,7 @@ public class AppServiceTest extends Mockito {
         verify(mockSubpopService).deleteAllSubpopulations(app.getIdentifier());
         verify(mockTopicService).deleteAllTopics(app.getIdentifier());
         verify(mockCacheProvider).removeApp(TEST_APP_ID);
-        verify(mockTemplateService).deleteTemplatesForApp(TEST_APP_ID);
+        verify(mockTemplateService).deleteAllTemplates(TEST_APP_ID);
         verify(mockFileService).deleteAllAppFiles(TEST_APP_ID);
     }
 
@@ -1666,11 +1679,19 @@ public class AppServiceTest extends Mockito {
         verify(mockCacheProvider).setApp(updatedApp);
         verify(mockCacheProvider).removeApp(app.getIdentifier());
 
-        verify(mockAppDao).deleteApp(updatedApp);
+        verify(mockAccountService).deleteAllAccounts(app.getIdentifier());
+        verify(mockStudyService).deleteAllStudies(app.getIdentifier());
+        verify(mockScheduleService).deleteAllSchedules(app.getIdentifier());
+        verify(mockAssessmentResourceService).deleteAllAssessmentResources(app.getIdentifier());
+        verify(mockAssessmentService).deleteAllAssessments(app.getIdentifier());
+        verify(mockOrgService).deleteAllOrganizations(app.getIdentifier());
+        verify(mockTemplateService).deleteAllTemplates(app.getIdentifier());
         verify(mockCompoundActivityDefinitionService)
                 .deleteAllCompoundActivityDefinitionsInApp(updatedApp.getIdentifier());
         verify(mockSubpopService).deleteAllSubpopulations(updatedApp.getIdentifier());
         verify(mockTopicService).deleteAllTopics(updatedApp.getIdentifier());
+        verify(mockFileService).deleteAllAppFiles(app.getIdentifier());
+        verify(mockAppDao).deleteApp(app);
     }
 
     @Test
@@ -1747,6 +1768,7 @@ public class AppServiceTest extends Mockito {
         existing.setEmailSignInEnabled(false);
         existing.setPhoneSignInEnabled(false);
         existing.setReauthenticationEnabled(false);
+        assertNotNull(existing.getExporter3Configuration());
         assertAppDefaults(existing);
         when(mockAppDao.getApp(app.getIdentifier())).thenReturn(existing);
         
@@ -1756,15 +1778,19 @@ public class AppServiceTest extends Mockito {
         
         // Researchers cannot change these through update
         changeAppDefaults(app);
+        app.setExporter3Configuration(null);
         app = service.updateApp(app, false);
+        assertNotNull(app.getExporter3Configuration());
         assertAppDefaults(app); // nope
         
         // But administrators can change these
         changeAppDefaults(app);
+        app.setExporter3Configuration(null);
         app = service.updateApp(app, true);
         // These values have all successfully been changed from the defaults
         assertFalse(app.isAppIdExcludedInExport());
         assertFalse(app.isEmailVerificationEnabled());
+        assertNull(app.getExporter3Configuration());
         assertFalse(app.isVerifyChannelOnSignInEnabled());
         assertTrue(app.isAutoVerificationPhoneSuppressed());
         assertTrue(app.isExternalIdRequiredOnSignup());
